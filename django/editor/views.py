@@ -25,6 +25,12 @@ def _denied(ex):
     return Response({'detail': ex.message, 'blocked': ex.as_json()}, status=ex.status)
 
 
+def _exc_text(ex):
+    """Текст исключения старой модели для пользователя; ошибки БД (кортеж кодов) — общим текстом."""
+    msg = ex.args[0] if ex.args else None
+    return msg if isinstance(msg, str) and msg else 'Не удалось сохранить публикацию'
+
+
 def _invalid(ex):
     return Response({'detail': str(ex), 'errors': ex.errors}, status=400)
 
@@ -129,7 +135,7 @@ class Posts(Base):
             return _invalid(ex)
         except Exception as ex:  # сигналы и save() старой модели сообщают причину текстом
             logger.warning('editor create: %s', ex, exc_info=True)
-            return Response({'detail': ex.args[0] if ex.args else 'Не удалось сохранить публикацию'}, status=400)
+            return Response({'detail': _exc_text(ex)}, status=400)
         return Response({'post': items.post(p), 'message': message, 'drafts': _drafts_count(user), 'uploaded': uploaded},
                         status=201)
 
@@ -166,7 +172,7 @@ class PostDetail(Base):
             return _invalid(ex)
         except Exception as ex:
             logger.warning('editor update %s: %s', pk, ex, exc_info=True)
-            return Response({'detail': ex.args[0] if ex.args else 'Не удалось сохранить публикацию'}, status=400)
+            return Response({'detail': _exc_text(ex)}, status=400)
         return Response({'post': items.post(p), 'message': message, 'drafts': _drafts_count(request.user),
                          'uploaded': uploaded})
 

@@ -583,11 +583,11 @@ def _image_json(img):
     return {'id': img.id, 'src': img.image.url, 'thumb': thumb, 'preload': getattr(img, 'full_preload_webp_url', None)}
 
 
-def _store_uploads(uploads):
+def _store_uploads(user, uploads):
     """Новые фото → PostImages (save() сам уменьшает файл и запоминает размеры). → {ключ: картинка}"""
     created = {}
     for key, f in uploads:
-        img = PostImages(image=f)
+        img = PostImages(image=f, user=user)
         img.save()
         created[key] = img
     return created
@@ -654,7 +654,7 @@ def _save(user, data, mode, post, files, created):
             post.review_of = v['review_of']
     else:
         post.status = status
-    created.update(_store_uploads(v['uploads']))
+    created.update(_store_uploads(user, v['uploads']))
     post.title = v['title']
     post.content = _put_uploads(v['content'], created)
     post.preview = v['preview']
@@ -771,6 +771,12 @@ def _denied(ex):
     return Response({'detail': ex.message, 'blocked': ex.as_json()}, status=ex.status)
 
 
+def _exc_text(ex):
+    """Текст исключения старой модели для пользователя; ошибки БД (кортеж кодов) — общим текстом."""
+    msg = ex.args[0] if ex.args else None
+    return msg if isinstance(msg, str) and msg else 'Не удалось сохранить публикацию'
+
+
 def _invalid(ex):
     return Response({'detail': str(ex), 'errors': ex.errors}, status=400)
 
@@ -875,7 +881,7 @@ class Posts(Base):
             return _invalid(ex)
         except Exception as ex:  # сигналы и save() старой модели сообщают причину текстом
             logger.warning('editor create: %s', ex, exc_info=True)
-            return Response({'detail': ex.args[0] if ex.args else 'Не удалось сохранить публикацию'}, status=400)
+            return Response({'detail': _exc_text(ex)}, status=400)
         return Response({'post': items.post(p), 'message': message, 'drafts': _drafts_count(user), 'uploaded': uploaded},
                         status=201)
 
@@ -912,7 +918,7 @@ class PostDetail(Base):
             return _invalid(ex)
         except Exception as ex:
             logger.warning('editor update %s: %s', pk, ex, exc_info=True)
-            return Response({'detail': ex.args[0] if ex.args else 'Не удалось сохранить публикацию'}, status=400)
+            return Response({'detail': _exc_text(ex)}, status=400)
         return Response({'post': items.post(p), 'message': message, 'drafts': _drafts_count(request.user),
                          'uploaded': uploaded})
 

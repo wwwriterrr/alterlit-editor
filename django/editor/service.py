@@ -238,11 +238,11 @@ def _image_json(img):
     return {'id': img.id, 'src': img.image.url, 'thumb': thumb, 'preload': getattr(img, 'full_preload_webp_url', None)}
 
 
-def _store_uploads(uploads):
+def _store_uploads(user, uploads):
     """Новые фото → PostImages (save() сам уменьшает файл и запоминает размеры). → {ключ: картинка}"""
     created = {}
     for key, f in uploads:
-        img = PostImages(image=f)
+        img = PostImages(image=f, user=user)
         img.save()
         created[key] = img
     return created
@@ -309,7 +309,7 @@ def _save(user, data, mode, post, files, created):
             post.review_of = v['review_of']
     else:
         post.status = status
-    created.update(_store_uploads(v['uploads']))
+    created.update(_store_uploads(user, v['uploads']))
     post.title = v['title']
     post.content = _put_uploads(v['content'], created)
     post.preview = v['preview']
