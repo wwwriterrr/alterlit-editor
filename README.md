@@ -4,8 +4,8 @@
 `/post/edit/?id=<id>` вместо шаблона `add_post.html` с TinyMCE. Редактор — Tiptap (ProseMirror),
 форма — Redux Toolkit, запросы — RTK Query.
 
-- Сборка: `npm run build` → `dist/post_editor.js`, `dist/post_editor.css` (статика `/assets/post_editor/`).
-- Выкладка: `../deploy.sh post_editor` (с `-b` — с пересборкой).
+- Сборка: `npm run build` → `dist/post_editor.js`, `dist/post_editor.css` (статика `/assets/editor/`).
+- Выкладка: `../deploy.sh editor` (с `-b` — с пересборкой).
 - Бэк: `django/editor/` (пакет `api/editor/`), собранный патч — `django/editor_patch.py`
   (`python3 tools/build_patch.py` после правок).
 

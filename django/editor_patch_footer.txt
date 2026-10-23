@@ -25,12 +25,12 @@
 #   {% endif %}
 #   <link rel="preconnect" href="https://fonts.googleapis.com">
 #   <link href="https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
-#   <link rel="stylesheet" href="/assets/post_editor/post_editor.css?v=1">
+#   <link rel="stylesheet" href="/assets/editor/post_editor.css?v=1">
 #   <style>body{margin:0;background:#f5f0e5}</style>
 # </head>
 # <body>
 #   <div id="alterlit-editor" data-csrf="{{ csrf_token }}"></div>
-#   <script type="module" src="/assets/post_editor/post_editor.js?v=1"></script>
+#   <script type="module" src="/assets/editor/post_editor.js?v=1"></script>
 # </body>
 # </html>
 

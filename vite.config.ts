@@ -267,8 +267,8 @@ export default defineConfig(({ mode, command }) => {
   });
 
   return {
-    // Статику отдаёт Django с /assets/post_editor/
-    base: command === 'build' ? env.VITE_ASSETS_BASE || '/assets/post_editor/' : '/',
+    // Статику отдаёт Django с /assets/editor/
+    base: command === 'build' ? env.VITE_ASSETS_BASE || '/assets/editor/' : '/',
     plugins: [react(), ...(command === 'serve' && env.DEV_FIXTURES ? [editorFixture(env)] : [])],
     build: {
       outDir: 'dist',
