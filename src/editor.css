@@ -15,6 +15,8 @@
   --pe-green: #245326;
   --pe-red: #b24a3e;
   --pe-red-soft: #f4e0dd;
+  /* высота верхней панели; --pe-top — вся закреплённая шапка (ставит EditorScreen по факту) */
+  --pe-bar: 60px;
   --pe-top: 60px;
   --pe-aside: 340px;
   font: 15px/1.45 'PT Serif', Helvetica, sans-serif;
@@ -34,15 +36,19 @@
   background: var(--pe-bg);
 }
 
-/* ── верхняя панель ── */
-.pe-top {
+/* ── закреплённая шапка: верхняя панель + полоса отправки + восстановление ── */
+.pe-head {
   position: sticky;
   z-index: 30;
   top: 0;
+}
+
+/* ── верхняя панель ── */
+.pe-top {
   display: flex;
   align-items: center;
   gap: 14px;
-  height: var(--pe-top);
+  height: var(--pe-bar);
   padding: 0 16px 0 10px;
   border-bottom: 1px solid var(--pe-line);
   background: rgba(255, 253, 248, 0.94);
@@ -387,9 +393,7 @@
 
 /* ── отправка фото при сохранении ── */
 .pe-upload {
-  position: sticky;
-  z-index: 29;
-  top: var(--pe-top);
+  position: relative;
   height: 26px;
   overflow: hidden;
   background: var(--pe-amber-soft);
@@ -1823,6 +1827,7 @@ select.pe-input {
 }
 @media (max-width: 700px) {
   #alterlit-editor {
+    --pe-bar: 54px;
     --pe-top: 54px;
   }
   .pe-top {

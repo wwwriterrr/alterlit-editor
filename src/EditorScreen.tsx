@@ -169,6 +169,20 @@ export default function EditorScreen({ config, initialContent }: { config: Edito
     setRecovery(null);
   };
 
+  // ── высота закреплённой шапки → --pe-top: от неё считаются панель инструментов и сайдбар ──
+  const appRef = useRef<HTMLDivElement>(null);
+  const headRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const head = headRef.current;
+    const app = appRef.current;
+    if (!head || !app) return;
+    const set = () => app.style.setProperty('--pe-top', `${head.offsetHeight}px`);
+    set();
+    const ro = new ResizeObserver(set);
+    ro.observe(head);
+    return () => ro.disconnect();
+  }, []);
+
   // ── уход со страницы ──
   const leaving = useRef(false);
   const go = (href: string) => {
@@ -348,82 +362,84 @@ export default function EditorScreen({ config, initialContent }: { config: Edito
   const settingsErrors = ['categories', 'genres', 'preview', 'ear', 'delay'].some((k) => errors[k]);
 
   return (
-    <div className="pe-app">
-      <header className="pe-top">
-        <a className="pe-logo" href="/" aria-label="На главную" onClick={leave}>
-          <Ic.Logo />
-        </a>
-        <div className="pe-top-status">
-          <b>{statusLabel}</b>
-          <span className="pe-top-saved" aria-live="polite">
-            {saving ? 'сохраняем…' : f.dirty ? 'есть несохранённые изменения' : savedAt ? `сохранено ${formatDate(new Date(savedAt).toISOString())}` : ''}
-          </span>
-        </div>
-        <div className="pe-top-actions">
-          <UserMenu user={config.user} day={config.day ? { ...config.day, used: dayUsed } : null} />
-          {draftsCount > 0 ? (
-            <button type="button" className="pe-btn pe-btn-ghost pe-hide-sm" onClick={() => setDrafts(true)}>
-              Черновики <span className="pe-badge">{draftsCount}</span>
+    <div className="pe-app" ref={appRef}>
+      {/* закреплённая шапка: панель, полоса отправки фото, «нашёлся несохранённый текст» */}
+      <div className="pe-head" ref={headRef}>
+        <header className="pe-top">
+          <a className="pe-logo" href="/" aria-label="На главную" onClick={leave}>
+            <Ic.Logo />
+          </a>
+          <div className="pe-top-status">
+            <b>{statusLabel}</b>
+            <span className="pe-top-saved" aria-live="polite">
+              {saving ? 'сохраняем…' : f.dirty ? 'есть несохранённые изменения' : savedAt ? `сохранено ${formatDate(new Date(savedAt).toISOString())}` : ''}
+            </span>
+          </div>
+          <div className="pe-top-actions">
+            <UserMenu user={config.user} day={config.day ? { ...config.day, used: dayUsed } : null} />
+            {draftsCount > 0 ? (
+              <button type="button" className="pe-btn pe-btn-ghost pe-hide-sm" onClick={() => setDrafts(true)}>
+                Черновики <span className="pe-badge">{draftsCount}</span>
+              </button>
+            ) : null}
+            {isDraftOrNew ? (
+              <button type="button" className="pe-btn pe-btn-ghost pe-hide-xs" onClick={() => save(true)} disabled={saving}>
+                Сохранить черновик
+              </button>
+            ) : null}
+            <button
+              type="button"
+              className="pe-btn pe-btn-ghost pe-settings-btn"
+              onClick={() => setSheet(true)}
+              aria-label="Настройки публикации"
+              data-error={settingsErrors || undefined}
+            >
+              <Ic.Gear />
             </button>
-          ) : null}
-          {isDraftOrNew ? (
-            <button type="button" className="pe-btn pe-btn-ghost pe-hide-xs" onClick={() => save(true)} disabled={saving}>
-              Сохранить черновик
+            <MoreMenu
+              items={[
+                ...(draftsCount > 0 ? [{ label: `Мои черновики (${draftsCount})`, onClick: () => setDrafts(true), cls: 'pe-show-sm' }] : []),
+                ...(isDraftOrNew ? [{ label: 'Сохранить черновик', onClick: () => save(true), cls: 'pe-show-xs' }] : []),
+                ...(!isDraftOrNew && f.status !== 'published' ? [{ label: 'Вернуть в черновики', onClick: () => setPending({ kind: 'toDraft' }) }] : []),
+                ...(f.id && f.status === 'draft' ? [{ label: 'Удалить черновик', onClick: () => setPending({ kind: 'delete' }), danger: true }] : []),
+                ...(f.url && f.status !== 'draft' ? [{ label: 'Открыть публикацию', href: f.url }] : []),
+                { label: 'Новая публикация', href: '/post/new/' },
+              ]}
+            />
+            <button type="button" className="pe-btn pe-btn-primary" onClick={() => validate(false) && setPending({ kind: 'publish' })} disabled={saving}>
+              {saving ? <span className="pe-spinner" aria-hidden="true" /> : null}
+              {primary}
             </button>
-          ) : null}
-          <button
-            type="button"
-            className="pe-btn pe-btn-ghost pe-settings-btn"
-            onClick={() => setSheet(true)}
-            aria-label="Настройки публикации"
-            data-error={settingsErrors || undefined}
-          >
-            <Ic.Gear />
-          </button>
-          <MoreMenu
-            items={[
-              ...(draftsCount > 0 ? [{ label: `Мои черновики (${draftsCount})`, onClick: () => setDrafts(true), cls: 'pe-show-sm' }] : []),
-              ...(isDraftOrNew ? [{ label: 'Сохранить черновик', onClick: () => save(true), cls: 'pe-show-xs' }] : []),
-              ...(!isDraftOrNew && f.status !== 'published' ? [{ label: 'Вернуть в черновики', onClick: () => setPending({ kind: 'toDraft' }) }] : []),
-              ...(f.id && f.status === 'draft' ? [{ label: 'Удалить черновик', onClick: () => setPending({ kind: 'delete' }), danger: true }] : []),
-              ...(f.url && f.status !== 'draft' ? [{ label: 'Открыть публикацию', href: f.url }] : []),
-              { label: 'Новая публикация', href: '/post/new/' },
-            ]}
-          />
-          <button type="button" className="pe-btn pe-btn-primary" onClick={() => validate(false) && setPending({ kind: 'publish' })} disabled={saving}>
-            {saving ? <span className="pe-spinner" aria-hidden="true" /> : null}
-            {primary}
-          </button>
-        </div>
-      </header>
-
-      {progress !== null ? (
-        <div className="pe-upload" role="progressbar" aria-label="Отправка фото" aria-valuenow={Math.round(progress * 100)}>
-          <i style={{ width: `${Math.round(progress * 100)}%` }} />
-          <span>{progress < 1 ? `Отправляем фото… ${Math.round(progress * 100)}%` : 'Сохраняем…'}</span>
-        </div>
-      ) : null}
-      {recovery ? (
-        <div className="pe-recovery" role="status">
-          <span>
-            Нашёлся несохранённый текст от {formatDate(new Date(recovery.at).toISOString())}
-            {recovery.title ? ` — «${recovery.title}»` : ''}.
-          </span>
-          <button type="button" className="pe-btn pe-btn-primary pe-btn-sm" onClick={restore}>
-            Восстановить
-          </button>
-          <button
-            type="button"
-            className="pe-btn pe-btn-ghost pe-btn-sm"
-            onClick={() => {
-              dropSnapshot(rKey);
-              setRecovery(null);
-            }}
-          >
-            Не нужно
-          </button>
-        </div>
-      ) : null}
+          </div>
+        </header>
+        {progress !== null ? (
+          <div className="pe-upload" role="progressbar" aria-label="Отправка фото" aria-valuenow={Math.round(progress * 100)}>
+            <i style={{ width: `${Math.round(progress * 100)}%` }} />
+            <span>{progress < 1 ? `Отправляем фото… ${Math.round(progress * 100)}%` : 'Сохраняем…'}</span>
+          </div>
+        ) : null}
+        {recovery ? (
+          <div className="pe-recovery" role="status">
+            <span>
+              Нашёлся несохранённый текст от {formatDate(new Date(recovery.at).toISOString())}
+              {recovery.title ? ` — «${recovery.title}»` : ''}.
+            </span>
+            <button type="button" className="pe-btn pe-btn-primary pe-btn-sm" onClick={restore}>
+              Восстановить
+            </button>
+            <button
+              type="button"
+              className="pe-btn pe-btn-ghost pe-btn-sm"
+              onClick={() => {
+                dropSnapshot(rKey);
+                setRecovery(null);
+              }}
+            >
+              Не нужно
+            </button>
+          </div>
+        ) : null}
+      </div>
 
       <div className="pe-layout">
         <main className="pe-main">
