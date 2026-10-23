@@ -1,0 +1,45 @@
+# ── 8. api/urls.py (общий файл API, /api/v1/…) ─────────────────────────────────
+#     path('editor/', include('api.editor.urls')),
+
+
+# ── 9. Страница редактора: templates/post_editor.html (новый файл) ─────────────
+# Отдельная страница без шапки и сайдбара сайта — у острова своя верхняя панель.
+#
+# {% load static %}<!doctype html>
+# <html lang="ru">
+# <head>
+#   <meta charset="utf-8">
+#   <meta name="viewport" content="width=device-width, initial-scale=1">
+#   <title>{% if request.resolver_match.kwargs.post_id == "edit" %}Редактирование{% else %}Новая публикация{% endif %} — Альтерлит</title>
+#   {% if request.mode == "alterlit" %}
+#   <link type="image/x-icon" rel="shortcut icon" href="{% static 'img/favicon_al.ico' %}">
+#   <link type="image/png" sizes="16x16" rel="icon" href="{% static 'img/favicon_al.png' %}">
+#   <link type="image/png" sizes="32x32" rel="icon" href="{% static 'img/favicon_al_32.png' %}">
+#   <link type="image/png" sizes="120x120" rel="icon" href="{% static 'img/favicon_al_120.png' %}">
+#   {% else %}
+#   <link type="image/x-icon" rel="shortcut icon" href="{% static 'img/favicon.ico' %}">
+#   <link type="image/png" sizes="16x16" rel="icon" href="{% static 'img/favicon.png' %}">
+#   <link type="image/png" sizes="32x32" rel="icon" href="{% static 'img/favicon_32.png' %}">
+#   <link type="image/png" sizes="96x96" rel="icon" href="{% static 'img/favicon_96.png' %}">
+#   <link type="image/png" sizes="120x120" rel="icon" href="{% static 'img/favicon_120.png' %}">
+#   {% endif %}
+#   <link rel="preconnect" href="https://fonts.googleapis.com">
+#   <link href="https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+#   <link rel="stylesheet" href="/assets/post_editor/post_editor.css?v=1">
+#   <style>body{margin:0;background:#f5f0e5}</style>
+# </head>
+# <body>
+#   <div id="alterlit-editor" data-csrf="{{ csrf_token }}"></div>
+#   <script type="module" src="/assets/post_editor/post_editor.js?v=1"></script>
+# </body>
+# </html>
+
+
+# ── 10. blog/views.py, post_api — новый редактор сначала только у вас ───────────
+# В начале веток GET "new" и GET "edit" (после проверки авторизации):
+#
+#     if request.user.id == 1:
+#         return render(request, "post_editor.html")
+#
+# Остальное старое остаётся как есть. Адреса те же: /post/new/, /post/new/?post_type=review&review_of=<id>,
+# /post/new/?post_type=blog, /post/edit/?id=<id>.
