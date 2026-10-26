@@ -5,9 +5,12 @@ import type { PostType } from './types';
  *   /post/new/                                — новая публикация
  *   /post/new/?post_type=review&review_of=<id> — рецензия
  *   /post/new/?post_type=blog                  — блог
+ *   /post/new/?draft=1                         — новый черновик, когда лимит текстов в сутки исчерпан
  *   /post/edit/?id=<id>                        — правка (и черновика)
  */
-export type Route = { kind: 'new'; postType: PostType; reviewOf: number | null } | { kind: 'edit'; id: number };
+export type Route =
+  | { kind: 'new'; postType: PostType; reviewOf: number | null; draftOnly: boolean }
+  | { kind: 'edit'; id: number };
 
 export function parseRoute(loc: Location | URL = window.location): Route {
   const q = new URLSearchParams(loc.search);
@@ -16,7 +19,7 @@ export function parseRoute(loc: Location | URL = window.location): Route {
   const t = q.get('post_type');
   const postType: PostType = t === 'review' || t === 'blog' ? t : 'post';
   const reviewOf = Number(q.get('review_of')) || null;
-  return { kind: 'new', postType, reviewOf: postType === 'review' ? reviewOf : null };
+  return { kind: 'new', postType, reviewOf: postType === 'review' ? reviewOf : null, draftOnly: q.get('draft') === '1' };
 }
 
 /** После первого сохранения новой публикации — адрес правки: «Обновить» не создаст копию. */

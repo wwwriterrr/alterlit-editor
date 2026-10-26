@@ -106,7 +106,12 @@ function editorFixture(env: Record<string, string>): Plugin {
             action: { label: 'Открыть настройки', url: '/profile/devil/?page=settings' },
           }
         : env.FIXTURE_BLOCKED === 'limit'
-          ? { code: 'limit', title: 'Уважаемый автор!', message: 'К рассмотрению мы принимаем не более 3 текстов в сутки. Возвращайтесь завтра.', action: null }
+          ? {
+              code: 'day_limit',
+              title: 'Уважаемый автор!',
+              message: 'К рассмотрению мы принимаем не более 3 текстов в сутки. Возвращайтесь завтра — а пока текст можно сохранить черновиком.',
+              action: null,
+            }
           : null,
     limits: { title: [1, 100], preview: [60, 240], ear: [20, 250], content: 20000, genres: 3, drafts: 10 },
     categories:
@@ -137,7 +142,7 @@ function editorFixture(env: Record<string, string>): Plugin {
     review_of: postType === 'review' ? { id: 92607, title: 'Поединок. Пентон 2', url: '/post/92607/' } : null,
     delay: editor ? { from: '08:00', to: '20:00', step: 30 } : null,
     drafts: drafts().length,
-    day: editor ? null : { limit: 3, used: 1 },
+    day: editor ? null : { limit: 3, used: env.FIXTURE_BLOCKED === 'limit' ? 3 : 1 },
     mode: 'alterlit',
   });
 

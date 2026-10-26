@@ -1763,6 +1763,38 @@ select.pe-input {
   margin: 0 0 18px;
   color: #3a3a32;
 }
+.pe-blocked-limit {
+  margin-top: 8vh;
+}
+.pe-blocked-drafts {
+  margin: 0 0 18px;
+  text-align: left;
+}
+.pe-blocked-drafts h2 {
+  margin: 0 0 8px;
+  font-size: 1em;
+  font-weight: 600;
+}
+.pe-blocked-drafts .pe-drafts {
+  max-height: 40vh;
+  overflow-y: auto;
+}
+.pe-blocked .pe-blocked-note {
+  font-size: 0.92em;
+  color: #6b5a33;
+}
+.pe-blocked-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+.pe-draft-only {
+  padding: 10px 16px;
+  border-bottom: 1px solid #ecd9ae;
+  background: var(--pe-amber-soft);
+  color: #5b4a2a;
+}
 
 /* ── узкие экраны ── */
 @media (max-width: 1280px) {

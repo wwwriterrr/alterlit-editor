@@ -4,7 +4,9 @@ import { errorText, useConfigQuery, usePostQuery } from './api';
 import { useAppDispatch } from './hooks';
 import { formActions } from './store';
 import EditorScreen from './EditorScreen';
+import { DraftsList } from './dialogs/DraftsDialog';
 import { Logo } from './icons';
+import type { EditorConfig } from './types';
 
 /** Адрес → что открыть; конфиг формы и (при правке) сама публикация; потом — редактор. */
 export default function App() {
@@ -43,8 +45,10 @@ export default function App() {
     );
   }
   if (!config.data || (id && !post.data)) return <Loading />;
-  if (config.data.blocked) {
-    const b = config.data.blocked;
+  const b = config.data.blocked;
+  // лимит текстов в сутки: черновик писать можно (/post/new/?draft=1), отправить — завтра
+  if (b?.code === 'day_limit' && !(route.kind === 'new' && route.draftOnly)) return <DayLimit config={config.data} />;
+  if (b && b.code !== 'day_limit') {
     return <Notice title={b.title} text={b.message} action={b.action ?? { label: 'На главную', url: '/' }} />;
   }
   return <EditorScreen config={config.data} initialContent={post.data?.content ?? ''} />;
@@ -68,6 +72,48 @@ function Loading() {
             <div className="pe-skel pe-skel-line pe-skel-short" />
           </div>
         </main>
+      </div>
+    </div>
+  );
+}
+
+/** Лимит на сегодня исчерпан: открыть черновик или начать новый — только черновиком. */
+function DayLimit({ config }: { config: EditorConfig }) {
+  const b = config.blocked!;
+  const full = config.drafts >= config.limits.drafts;
+  const url = new URL(window.location.href);
+  url.searchParams.set('draft', '1');
+  return (
+    <div className="pe-app">
+      <header className="pe-top">
+        <a className="pe-logo" href="/" aria-label="На главную">
+          <Logo />
+        </a>
+      </header>
+      <div className="pe-blocked pe-blocked-limit">
+        <h1>{b.title}</h1>
+        <p>{b.message}</p>
+        {config.drafts > 0 ? (
+          <section className="pe-blocked-drafts" aria-label="Мои черновики">
+            <h2>Мои черновики</h2>
+            <DraftsList />
+          </section>
+        ) : null}
+        {full ? (
+          <p className="pe-blocked-note">
+            Можно хранить не больше {config.limits.drafts} черновиков — допишите или удалите один из них.
+          </p>
+        ) : null}
+        <div className="pe-blocked-actions">
+          <a className="pe-btn pe-btn-ghost" href="/">
+            На главную
+          </a>
+          {full ? null : (
+            <a className="pe-btn pe-btn-primary" href={url.pathname + url.search}>
+              Создать черновик
+            </a>
+          )}
+        </div>
       </div>
     </div>
   );

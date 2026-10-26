@@ -333,6 +333,9 @@ export default function EditorScreen({ config, initialContent }: { config: Edito
 
   // ── кнопки ──
   const isDraftOrNew = !f.id || f.status === 'draft';
+  // лимит текстов на сегодня исчерпан: новый текст или черновик — только «Сохранить черновик»
+  const dayLimit = config.day?.limit ?? 0;
+  const draftOnly = isDraftOrNew && !editorRole && dayLimit > 0 && dayUsed >= dayLimit;
   const primary = isDraftOrNew ? (editorRole ? (f.delay ? 'Запланировать' : 'Опубликовать') : 'На модерацию') : 'Сохранить';
   const confirmText = (() => {
     const when = f.delay && config.delay ? ` Публикация выйдет ${formatDelay(f.delay)}.` : '';
@@ -382,7 +385,7 @@ export default function EditorScreen({ config, initialContent }: { config: Edito
                 Черновики <span className="pe-badge">{draftsCount}</span>
               </button>
             ) : null}
-            {isDraftOrNew ? (
+            {isDraftOrNew && !draftOnly ? (
               <button type="button" className="pe-btn pe-btn-ghost pe-hide-xs" onClick={() => save(true)} disabled={saving}>
                 Сохранить черновик
               </button>
@@ -399,23 +402,37 @@ export default function EditorScreen({ config, initialContent }: { config: Edito
             <MoreMenu
               items={[
                 ...(draftsCount > 0 ? [{ label: `Мои черновики (${draftsCount})`, onClick: () => setDrafts(true), cls: 'pe-show-sm' }] : []),
-                ...(isDraftOrNew ? [{ label: 'Сохранить черновик', onClick: () => save(true), cls: 'pe-show-xs' }] : []),
+                ...(isDraftOrNew && !draftOnly ? [{ label: 'Сохранить черновик', onClick: () => save(true), cls: 'pe-show-xs' }] : []),
                 ...(!isDraftOrNew && f.status !== 'published' ? [{ label: 'Вернуть в черновики', onClick: () => setPending({ kind: 'toDraft' }) }] : []),
                 ...(f.id && f.status === 'draft' ? [{ label: 'Удалить черновик', onClick: () => setPending({ kind: 'delete' }), danger: true }] : []),
                 ...(f.url && f.status !== 'draft' ? [{ label: 'Открыть публикацию', href: f.url }] : []),
                 { label: 'Новая публикация', href: '/post/new/' },
               ]}
             />
-            <button type="button" className="pe-btn pe-btn-primary" onClick={() => validate(false) && setPending({ kind: 'publish' })} disabled={saving}>
-              {saving ? <span className="pe-spinner" aria-hidden="true" /> : null}
-              {primary}
-            </button>
+            {draftOnly ? (
+              <button type="button" className="pe-btn pe-btn-primary" onClick={() => save(true)} disabled={saving}>
+                {saving ? <span className="pe-spinner" aria-hidden="true" /> : null}
+                <span className="pe-hide-xs">Сохранить черновик</span>
+                <span className="pe-show-xs">В черновики</span>
+              </button>
+            ) : (
+              <button type="button" className="pe-btn pe-btn-primary" onClick={() => validate(false) && setPending({ kind: 'publish' })} disabled={saving}>
+                {saving ? <span className="pe-spinner" aria-hidden="true" /> : null}
+                {primary}
+              </button>
+            )}
           </div>
         </header>
         {progress !== null ? (
           <div className="pe-upload" role="progressbar" aria-label="Отправка фото" aria-valuenow={Math.round(progress * 100)}>
             <i style={{ width: `${Math.round(progress * 100)}%` }} />
             <span>{progress < 1 ? `Отправляем фото… ${Math.round(progress * 100)}%` : 'Сохраняем…'}</span>
+          </div>
+        ) : null}
+        {draftOnly ? (
+          <div className="pe-draft-only" role="status">
+            Сегодня отправлено {dayUsed} из {dayLimit} — лимит на сутки исчерпан. Текст можно сохранить черновиком и отправить на
+            модерацию завтра.
           </div>
         ) : null}
         {recovery ? (
